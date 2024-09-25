@@ -1,0 +1,33 @@
+dist/
+out/
+*.js
+
+# to opt-out adhoc files, add triple underscores
+___*
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Logs
+*.log
+
+# Dependency directories
+node_modules/
+
+# OS
+.DS_Store
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history

@@ -1,0 +1,8 @@
+// Note: despite the extension, this is interpreted as JSON with Comments by VSCode (https://github.com/microsoft/vscode/issues/100688)
+{
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "mrmlnc.vscode-json5"
+    ]
+  }

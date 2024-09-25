@@ -1,0 +1,11 @@
+// Note: despite the extension, this is interpreted as JSON with Comments by VSCode (https://github.com/microsoft/vscode/issues/100688)
+{
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs": "active",
+  
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    
+    // Use same typescript version as repository
+    "typescript.tsdk": "node_modules/typescript/lib"
+  }
