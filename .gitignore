@@ -1,6 +1,5 @@
 dist/
 out/
-*.js
 
 # to opt-out adhoc files, add triple underscores
 ___*

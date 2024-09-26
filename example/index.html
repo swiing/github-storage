@@ -1,0 +1,20 @@
+<script type="module">
+  import { init, read, write } from '../dist/index.js'
+
+  /* initialise */
+
+  // domain is the netlify project which has git-gateway active
+  const domain = 'lustrous-douhua-334a74.netlify.app'
+  // as well as netlify identity with some registered user
+  // SET PROPER INFORMATION HERE
+  const [username, password] = ['xxx@gmail.com', '***']
+
+  init({ domain, username, password })
+
+  /* read data */
+  read('README.md').then(console.log).catch(console.error)
+
+  /* write data */
+  // write('newfile.txt', 'some content').then(console.log).catch(console.error)
+</script>
+<p>Open console to view logs.</p>
