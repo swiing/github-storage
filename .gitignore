@@ -1,6 +1,8 @@
 dist/
 out/
 
+example/credentials.js
+
 # to opt-out adhoc files, add triple underscores
 ___*
 
