@@ -15,21 +15,18 @@ export async function read(
     headers: {
       Authorization: `Bearer ${access_token}`,
       'Content-Type': 'application/json',
+      accept: 'application/vnd.github+json',
     },
   })
     .then((resp) => resp.json())
     .then((data) => {
-      if (data.code === 400) {
-        // netlifyIdentity.refresh().then(function (token) {
-        //   getData(path);
-        // });
-      } else {
+      if (data.content) {
         // base64 decode content
         data.content = atob(data.content)
         // by convention we assume stored data is in json format
         // otherwise, throw an error
         data.content = JSON.parse(data.content)
-        return data
       }
+      return data
     })
 }

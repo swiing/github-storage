@@ -24,9 +24,11 @@ export async function write(
         ),
         branch,
         committer,
-        sha: curfile?.sha,
+        sha: curfile.sha,
       }
 
+      // Github API to write content
+      // https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#create-or-update-file-contents
       return fetch(`https://${domain}/.netlify/git/github/contents/${path}`, {
         method: 'PUT',
         body: JSON.stringify(opts),
@@ -34,20 +36,12 @@ export async function write(
         headers: {
           Authorization: `Bearer ${token.access_token}`,
           'Content-Type': 'application/json',
+          accept: 'application/vnd.github+json',
         },
       })
     })
     .then((resp) => {
       return resp.json()
-    })
-    .then((data) => {
-      if (data.code == 400) {
-        // netlifyIdentity.refresh().then(function(token) {
-        //     saveData(path)
-        // })
-      } else {
-        return data
-      }
     })
     .catch(console.error)
 }
