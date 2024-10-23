@@ -20,13 +20,10 @@ export async function read(
   })
     .then((resp) => resp.json())
     .then((data) => {
-      if (data.content) {
+      if (data.content)
         // base64 decode content
         data.content = atob(data.content)
-        // by convention we assume stored data is in json format
-        // otherwise, throw an error
-        data.content = JSON.parse(data.content)
-      }
+
       return data
     })
 }

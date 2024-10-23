@@ -7,24 +7,21 @@ const branch = 'master'
 export async function write(
   path: string,
   token: { access_token: string },
-  data: { [x: number]: string },
+  data: string, // { [x: number]: string },
+  merge: Function,
   message = '[log-bot]'
 ) {
   return read(path, token)
-    .then(async function (curfile) {
+    .then(async function ({ content, sha }) {
       const { domain } = getConfig()
-      // let user = netlifyIdentity.currentUser()
-      // let token = user.token.access_token
       const opts = {
         path,
-        message,
-        content: btoa(
-          // append new content to existing content
-          JSON.stringify(Object.assign(curfile?.content || {}, data))
-        ),
+        // append new content to existing content, and base64-encode
+        content: btoa(merge(content, data)),
         branch,
+        message,
         committer,
-        sha: curfile.sha,
+        sha,
       }
 
       // Github API to write content

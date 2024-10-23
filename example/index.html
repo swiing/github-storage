@@ -1,17 +1,37 @@
 <script type="module">
-  import { init, read, write } from '../dist/index.js'
+  import {
+    init,
+    jsonread,
+    jsonwrite,
+    csvread,
+    csvwrite,
+  } from '../dist/index.js'
   import { domain, username, password } from './credentials.js'
 
   /* initialise */
   init({ domain, username, password })
 
   /* read data */
-  read('log.txt') //
+  // await, otherwise there is a risk of 409 Conflict response
+  // when trying to write subsequently
+  await jsonread('log.json') //
     .then(console.log)
     .catch(console.error)
 
   /* write data */
-  write('log.txt', JSON.stringify({ content: 'some content' }))
+  await jsonwrite('log.json', { [Date.now()]: { content: 'some content' } })
+    .then(console.log)
+    .catch(console.error)
+
+  /* read data */
+  // await, otherwise there is a risk of 409 Conflict response
+  // when trying to write subsequently
+  await csvread('log.csv') //
+    .then(console.log)
+    .catch(console.error)
+
+  /* write data */
+  await csvwrite('log.csv', `${Date.now()},some content`)
     .then(console.log)
     .catch(console.error)
 </script>
