@@ -9,28 +9,36 @@
   // await, otherwise there is a risk of 409 Conflict response
   // when trying to write subsequently
   await storage
-    .jsonread('log.json') //
+    .jsonread('log2.json') //
     .then(console.log)
     .catch(console.error)
 
   /* write data */
   await storage
-    .jsonwrite('log.json', { [Date.now()]: { content: 'some content' } })
-    .then(console.log)
+    .jsonwrite('log2.json', { [Date.now()]: { content: 'some content' } }, true)
+    .then((result) => {
+      if (result.status === '409')
+        throw `Error 409: are you trying to overwrite an existing file (consider adding the \`append\` parameter), or are you trying concurrent access (consider \`await\`-ing operations)? (${result.message})`
+      console.dir(result)
+    })
     .catch(console.error)
 
   /* read data */
   // await, otherwise there is a risk of 409 Conflict response
   // when trying to write subsequently
   await storage //
-    .csvread('log.csv')
+    .csvread('log2.csv')
     .then(console.log)
     .catch(console.error)
 
   /* write data */
   await storage
-    .csvwrite('log.csv', `${Date.now()},some content`)
-    .then(console.log)
+    .csvwrite('log2.csv', `${Date.now()},some content`, true)
+    .then((result) => {
+      if (result.status === '409')
+        throw `Error 409: are you trying to overwrite an existing file (consider adding the \`append\` parameter), or are you trying concurrent access (consider \`await\`-ing operations)? (${result.message})`
+      console.dir(result)
+    })
     .catch(console.error)
 </script>
 

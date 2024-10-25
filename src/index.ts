@@ -53,12 +53,23 @@ export default class GithubStorage {
     //   .catch((error) => console.log(`Failed :( ${JSON.stringify(error)}`))
   }
 
-  // E.g. path == 'newfile.json', data == 'some content'
-  public async jsonwrite(path: string, data: jsonObject) {
+  // @param path e.g. 'newfile.json',
+  // @param data e.g. { key: 'some content'}
+  // @param append: merges provided data to existing data
+  //                otherwise file is created
+  // append is meant to (and MUST) be used when the file already exists.
+  // If append is not set but the file does exist already, the operation
+  // will fail with result 409 Conflict.
+  public async jsonwrite(path: string, data: jsonObject, append?: boolean) {
     return this.auth
       .login(this.username, this.password, true)
       .then((user) =>
-        this.write(path, user.token, JSON.stringify(data), mergejson)
+        this.write(
+          path,
+          user.token,
+          JSON.stringify(data),
+          append ? mergejson : null
+        )
       )
     // .then(console.log)
     //   .catch((error) => console.log(`Failed :( ${JSON.stringify(error)}`))
@@ -78,11 +89,19 @@ export default class GithubStorage {
     //   .catch((error) => console.log(`Failed :( ${JSON.stringify(error)}`))
   }
 
-  // E.g. path == 'newfile.csv', data == 'some content'
-  public async csvwrite(path: string, data: string) {
+  // @param path e.g. 'newfile.csv',
+  // @param data e.g. 'some content'
+  // @param append: merges provided data to existing data
+  //                otherwise file is created
+  // append is meant to (and MUST) be used when the file already exists.
+  // If append is not set but the file does exist already, the operation
+  // will fail with result 409 Conflict.
+  public async csvwrite(path: string, data: string, append?: boolean) {
     return this.auth
       .login(this.username, this.password, true)
-      .then((user) => this.write(path, user.token, data, mergecsv))
+      .then((user) =>
+        this.write(path, user.token, data, append ? mergecsv : null)
+      )
     // .then(console.log)
     //   .catch((error) => console.log(`Failed :( ${JSON.stringify(error)}`))
   }
@@ -115,17 +134,19 @@ export default class GithubStorage {
     path: string,
     token: { access_token: string },
     data: string, // { [x: number]: string },
-    merge: Function,
+    merge: Function | null,
     message = '[log-bot]'
   ) {
     const domain = this.domain
     const branch = this.branch
-    return this.read(path, token)
+    return (
+      merge ? this.read(path, token) : Promise.resolve({ content: '', sha: '' })
+    )
       .then(async function ({ content, sha }) {
         const opts = {
           path,
           // append new content to existing content, and base64-encode
-          content: btoa(merge(content, data)),
+          content: btoa(merge?.(content, data) ?? data),
           branch,
           message,
           committer,
