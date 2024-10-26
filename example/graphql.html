@@ -1,0 +1,44 @@
+<script type="module">
+  import GithubStorage from '../dist/graphql.js'
+  import { repository, owner, pat, branch } from './credentials.js'
+
+  /* initialise */
+  const storage = new GithubStorage(repository, owner, pat, branch)
+
+  /* read data */
+  // await, otherwise there is a risk of 409 Conflict response
+  // when trying to write subsequently
+  const text = await storage
+    .read('log2.json') //
+    .then((result) => {
+      console.log(result)
+      return result
+    })
+    .catch(console.error)
+
+  /* write data */
+  await storage
+    .log([
+      {
+        path: 'myfile2.txt',
+        contents: 'SGVsbG8gZnJvbSBKQVZBIGFuZCBHcmFwaFFM',
+      },
+      {
+        path: 'log2.json',
+        contents: btoa(
+          JSON.stringify(
+            {
+              ...{ [Date.now()]: 'some content' },
+              ...JSON.parse(text),
+            },
+            null,
+            '\t'
+          )
+        ),
+      },
+    ])
+    .then(console.dir)
+    .catch(console.error)
+</script>
+
+<p>Open console to view logs.</p>
