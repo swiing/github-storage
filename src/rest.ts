@@ -1,3 +1,6 @@
+// This is kept for the record,
+// but prefer the graphql api
+
 // originally insppired by https://github.com/dashpilot/netlify-identity-git-gateway
 
 import GoTrue from 'gotrue-js'

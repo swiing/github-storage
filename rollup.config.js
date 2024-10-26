@@ -5,7 +5,7 @@ import commonjs from '@rollup/plugin-commonjs'
 export default {
   input: 'src/graphql.ts',
   output: {
-    file: 'dist/graphql.js',
+    file: 'dist/index.js',
     format: 'esm',
     name: 'logger',
   },

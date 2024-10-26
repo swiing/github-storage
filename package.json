@@ -2,7 +2,7 @@
   "name": "@stockastix/logger",
   "version": "0.0.1",
   "description": "use github as a log storage",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "rollup -c",
     "lint": "eslint ./src --ext ts",
