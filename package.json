@@ -1,5 +1,5 @@
 {
-  "name": "@stockastix/logger",
+  "name": "@swiing/github-storage",
   "version": "0.0.1",
   "description": "use github as a log storage",
   "main": "dist/index.js",
