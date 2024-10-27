@@ -37,8 +37,39 @@ export default class GithubStorage {
     return text
   }
 
+  /* commit */
+  async log(
+    additions: { path: string; contents: string }[],
+    message = {
+      headline: '[log-bot]',
+    }
+  ) {
+    return await this.#graphqlWithAuth<GraphQlQueryResponseData>(
+      `mutation ($input: CreateCommitOnBranchInput!) {
+      createCommitOnBranch(input: $input) {
+        commit {
+          url
+        }
+      }
+    }`,
+      {
+        input: {
+          branch: {
+            repositoryNameWithOwner: `${this.#owner}/${this.#repository}`,
+            branchName: `${this.#branch}`,
+          },
+          message,
+          fileChanges: {
+            additions,
+          },
+          expectedHeadOid: await this.getOid(),
+        },
+      }
+    )
+  }
+
+  /* read oid of head - this is needed for subsequent commit */
   private async getOid(): Promise<string> {
-    /* read oid of head - this is needed for subsequent commit */
     const {
       repository: {
         defaultBranchRef: {
@@ -71,36 +102,5 @@ export default class GithubStorage {
       `
     )
     return oid
-  }
-
-  /* commit */
-  async log(
-    additions: { path: string; contents: string }[],
-    message = {
-      headline: '[log-bot]',
-    }
-  ) {
-    return await this.#graphqlWithAuth<GraphQlQueryResponseData>(
-      `mutation ($input: CreateCommitOnBranchInput!) {
-      createCommitOnBranch(input: $input) {
-        commit {
-          url
-        }
-      }
-    }`,
-      {
-        input: {
-          branch: {
-            repositoryNameWithOwner: `${this.#owner}/${this.#repository}`,
-            branchName: `${this.#branch}`,
-          },
-          message,
-          fileChanges: {
-            additions,
-          },
-          expectedHeadOid: await this.getOid(),
-        },
-      }
-    )
   }
 }
