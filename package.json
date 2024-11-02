@@ -3,8 +3,9 @@
   "version": "0.0.1",
   "description": "use github as a log storage",
   "main": "dist/index.js",
+  "typings": "dist/graphql.d.ts",
   "scripts": {
-    "build": "rollup -c",
+    "build": "tsc -p . && rollup -c",
     "lint": "eslint ./src --ext ts",
     "prepare": "npm run build",
     "style:fix": "prettier src/**/*.ts --write",
