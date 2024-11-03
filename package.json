@@ -38,6 +38,6 @@
     "octokit": "^4.0.2"
   },
   "files": [
-    "dist/index.js"
+    "dist/"
   ]
 }
