@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "use github as a log storage",
   "main": "dist/index.js",
-  "typings": "dist/graphql.d.ts",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p . && rollup -c",
     "lint": "eslint ./src --ext ts",
@@ -34,7 +34,8 @@
   "dependencies": {
     "@octokit/graphql": "^8.1.1",
     "@rollup/plugin-commonjs": "^28.0.0",
-    "gotrue-js": "^0.9.29"
+    "gotrue-js": "^0.9.29",
+    "octokit": "^4.0.2"
   },
   "files": [
     "dist/index.js"

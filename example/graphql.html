@@ -1,5 +1,5 @@
 <script type="module">
-  import GithubStorage from '../dist/index.js'
+  import { GithubStorage } from '../dist/index.js'
   import { repository, owner, pat, branch } from './credentials.js'
 
   /* initialise */
@@ -16,7 +16,7 @@
     })
     .catch(console.error)
 
-  /* write data */
+  /* write data * /
   await storage
     .log([
       {
@@ -38,7 +38,7 @@
       },
     ])
     .then(console.dir)
-    .catch(console.error)
+    .catch(console.error) /* */
 </script>
 
 <p>Open console to view logs.</p>
