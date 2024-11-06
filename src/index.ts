@@ -1,2 +1,2 @@
-export { getGist, createGist } from './gists.js'
+export { getGist, createGist, updateGist } from './gists.js'
 export { default as GithubStorage } from './graphql.js'

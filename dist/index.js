@@ -5272,8 +5272,8 @@ function onSecondaryRateLimit(retryAfter, options, octokit) {
 const headers = { 'X-GitHub-Api-Version': '2022-11-28' };
 // ref https://docs.github.com/en/rest/gists/gists?apiVersion=2022-11-28#create-a-gist
 // Note: at this stage, it seems there is no graphql API to create gists
-function createGist(files, auth, description) {
-    return __awaiter(this, void 0, void 0, function* () {
+function createGist(files_1, auth_1, description_1) {
+    return __awaiter(this, arguments, void 0, function* (files, auth, description, isPublic = false) {
         // Octokit.js
         // https://github.com/octokit/core.js#readme
         const octokit = new Octokit({
@@ -5283,7 +5283,7 @@ function createGist(files, auth, description) {
         });
         const res = yield octokit.request('POST /gists', {
             description,
-            public: false,
+            public: isPublic,
             files,
             headers,
         });
@@ -5293,6 +5293,32 @@ function createGist(files, auth, description) {
         if (status !== 201 && status !== 304)
             return null;
         //   console.dir(data)
+        const { id } = data;
+        return id;
+    });
+}
+// ref https://octokit.github.io/rest.js/v20/#gists-update
+// Note: at this stage, it seems there is no graphql API to create gists
+function updateGist(gist_id, 
+// for now, I do not support delete or rename file
+files, auth) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Octokit.js
+        // https://github.com/octokit/core.js#readme
+        const octokit = new Octokit({
+            // must have gists read/write permission
+            // + access to all repositories (in fact private repositories), to be able to write secret gists
+            auth,
+        });
+        const res = yield octokit.rest.gists.update({
+            gist_id,
+            files,
+        });
+        // console.dir(res)
+        const { /* status, */ data } = res;
+        // status is always === 200 in case of gist update
+        // if (status !== 201 && status !== 304) return null
+        // console.dir(data)
         const { id } = data;
         return id;
     });
@@ -5408,4 +5434,4 @@ class GithubStorage {
 }
 _GithubStorage_graphqlWithAuth = new WeakMap(), _GithubStorage_repository = new WeakMap(), _GithubStorage_owner = new WeakMap(), _GithubStorage_branch = new WeakMap();
 
-export { GithubStorage, createGist, getGist };
+export { GithubStorage, createGist, getGist, updateGist };
