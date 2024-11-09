@@ -5293,8 +5293,10 @@ function createGist(files_1, auth_1, description_1) {
         if (status !== 201 && status !== 304)
             return null;
         //   console.dir(data)
-        const { id } = data;
-        return id;
+        // const { id } = data // this is the gist hash
+        // but I also want to get the revision hash
+        const url = data.history[0].url;
+        return url !== null && url !== void 0 ? url : null;
     });
 }
 // ref https://octokit.github.io/rest.js/v20/#gists-update
@@ -5319,8 +5321,10 @@ files, auth) {
         // status is always === 200 in case of gist update
         // if (status !== 201 && status !== 304) return null
         // console.dir(data)
-        const { id } = data;
-        return id;
+        // const { id } = data // this is the gist hash
+        // but I also want to get the revision hash
+        const url = data.history[0].url;
+        return url !== null && url !== void 0 ? url : null;
     });
 }
 // ref https://docs.github.com/en/rest/gists/gists?apiVersion=2022-11-28#get-a-gist

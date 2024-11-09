@@ -2,13 +2,13 @@ export declare function createGist(files: {
     [key: string]: {
         content: string;
     };
-}, auth: string, description: string, isPublic?: boolean): Promise<string | null | undefined>;
+}, auth: string, description: string, isPublic?: boolean): Promise<string | null>;
 export declare function updateGist(gist_id: string, files: {
     [key: string]: {
         content?: string;
         filename?: null;
     };
-}, auth: string): Promise<string | undefined>;
+}, auth: string): Promise<string | null>;
 export declare function getGist(gist_id: string, auth?: string): Promise<{
     forks?: {
         id?: string;
