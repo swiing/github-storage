@@ -10,4 +10,5 @@ export default class GithubStorage {
         headline: string;
     }): Promise<GraphQlQueryResponseData>;
     private getOid;
+    createBranch(branch: string): Promise<string | null>;
 }

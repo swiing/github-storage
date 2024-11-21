@@ -39,6 +39,15 @@
     ])
     .then(console.dir)
     .catch(console.error) /* */
+
+  // create branch
+  const aBranchName = 'testbranch'
+  const newbranch = await storage.createBranch(aBranchName)
+  if (newbranch) console.log(`created branch ${newbranch}.`)
+  else
+    console.log(
+      `could not create branch ${aBranchName} (either the branch already existed, or another error occured). `
+    )
 </script>
 
 <p>Open console to view logs.</p>

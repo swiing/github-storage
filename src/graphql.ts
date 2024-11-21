@@ -103,4 +103,47 @@ export default class GithubStorage {
     )
     return oid
   }
+
+  // https://github.com/orgs/community/discussions/35291
+  async createBranch(branch: string): Promise<string | null> {
+    try {
+      // retrieve repositoryId and oid
+      const {
+        repository: {
+          id,
+          defaultBranchRef: {
+            target: { oid },
+          },
+        },
+      } = await this.#graphqlWithAuth<GraphQlQueryResponseData>(`{
+        repository(name: "${this.#repository}", owner: "${this.#owner}") {
+          id
+          defaultBranchRef {
+            target {
+              ... on GitObject {
+                oid
+              }
+            }
+          }
+        }
+      }`)
+
+      // create branch
+      const {
+        createRef: {
+          ref: { name },
+        },
+      } = await this.#graphqlWithAuth<GraphQlQueryResponseData>(`mutation {
+        createRef(input: {name: "refs/heads/${branch}", repositoryId: "${id}", oid: "${oid}"}) {
+          ref {
+            name
+          }
+        }
+      }`)
+      return name
+    } catch (error) {
+      console.error(error)
+      return null
+    }
+  }
 }

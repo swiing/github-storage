@@ -5435,6 +5435,39 @@ class GithubStorage {
             return oid;
         });
     }
+    // https://github.com/orgs/community/discussions/35291
+    createBranch(branch) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // retrieve repositoryId and oid
+                const { repository: { id, defaultBranchRef: { target: { oid }, }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `{
+        repository(name: "${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}", owner: "${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}") {
+          id
+          defaultBranchRef {
+            target {
+              ... on GitObject {
+                oid
+              }
+            }
+          }
+        }
+      }`);
+                // create branch
+                const { createRef: { ref: { name }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `mutation {
+        createRef(input: {name: "refs/heads/${branch}", repositoryId: "${id}", oid: "${oid}"}) {
+          ref {
+            name
+          }
+        }
+      }`);
+                return name;
+            }
+            catch (error) {
+                console.error(error);
+                return null;
+            }
+        });
+    }
 }
 _GithubStorage_graphqlWithAuth = new WeakMap(), _GithubStorage_repository = new WeakMap(), _GithubStorage_owner = new WeakMap(), _GithubStorage_branch = new WeakMap();
 
