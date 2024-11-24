@@ -5376,7 +5376,7 @@ class GithubStorage {
         return __awaiter(this, void 0, void 0, function* () {
             const { repository: { object: { text }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `{
     repository(name: "${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}", owner: "${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}") {
-      object(expression: "HEAD:${file}") {
+      object(expression: "${__classPrivateFieldGet(this, _GithubStorage_branch, "f")}:${file}") {
         ... on Blob {
           text
         }

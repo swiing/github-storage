@@ -27,7 +27,7 @@ export default class GithubStorage {
       },
     } = await this.#graphqlWithAuth<GraphQlQueryResponseData>(`{
     repository(name: "${this.#repository}", owner: "${this.#owner}") {
-      object(expression: "HEAD:${file}") {
+      object(expression: "${this.#branch}:${file}") {
         ... on Blob {
           text
         }
