@@ -68,38 +68,27 @@ export default class GithubStorage {
     )
   }
 
-  /* read oid of head - this is needed for subsequent commit */
+  /* read oid of head - this is needed e.g. for subsequent commit */
   private async getOid(): Promise<string> {
     const {
       repository: {
-        defaultBranchRef: {
-          target: {
-            history: {
-              nodes: {
-                0: { oid },
-              },
-            },
-          },
+        ref: {
+          target: { oid },
         },
       },
     } = await this.#graphqlWithAuth<GraphQlQueryResponseData>(
       `
         {
           repository(name: "${this.#repository}", owner: "${this.#owner}") {
-            defaultBranchRef {
+            ref(qualifiedName: "${this.#branch}") {
               target {
-                ... on Commit {
-                  history(first: 1) {
-                    nodes {
-                      oid
-                    }
-                  }
+                ... on GitObject {
+                  oid
                 }
               }
             }
           }
-        }
-      `
+        }`
     )
     return oid
   }
@@ -111,6 +100,8 @@ export default class GithubStorage {
       const {
         repository: {
           id,
+          // "main" branch will be the base of the new branch
+          // @todo: should I define a "template" branch and make it the base for new branches?
           defaultBranchRef: {
             target: { oid },
           },

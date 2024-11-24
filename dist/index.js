@@ -5412,26 +5412,21 @@ class GithubStorage {
             });
         });
     }
-    /* read oid of head - this is needed for subsequent commit */
+    /* read oid of head - this is needed e.g. for subsequent commit */
     getOid() {
         return __awaiter(this, void 0, void 0, function* () {
-            const { repository: { defaultBranchRef: { target: { history: { nodes: { 0: { oid }, }, }, }, }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `
+            const { repository: { ref: { target: { oid }, }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `
         {
           repository(name: "${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}", owner: "${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}") {
-            defaultBranchRef {
+            ref(qualifiedName: "${__classPrivateFieldGet(this, _GithubStorage_branch, "f")}") {
               target {
-                ... on Commit {
-                  history(first: 1) {
-                    nodes {
-                      oid
-                    }
-                  }
+                ... on GitObject {
+                  oid
                 }
               }
             }
           }
-        }
-      `);
+        }`);
             return oid;
         });
     }
@@ -5440,7 +5435,10 @@ class GithubStorage {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 // retrieve repositoryId and oid
-                const { repository: { id, defaultBranchRef: { target: { oid }, }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `{
+                const { repository: { id, 
+                // "main" branch will be the base of the new branch
+                // @todo: should I define a "template" branch and make it the base for new branches?
+                defaultBranchRef: { target: { oid }, }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `{
         repository(name: "${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}", owner: "${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}") {
           id
           defaultBranchRef {
