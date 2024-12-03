@@ -1,6 +1,8 @@
 import { graphql } from '@octokit/graphql'
 import type { GraphQlQueryResponseData } from '@octokit/graphql'
 
+export type { GraphQlQueryResponseData }
+
 // https://stackoverflow.com/questions/72836597/how-to-create-new-commit-with-the-github-graphql-api
 
 export default class GithubStorage {
@@ -20,7 +22,7 @@ export default class GithubStorage {
   }
 
   // e.g. file === log.json
-  async read(file: string) {
+  async read(file: string): Promise<string> {
     const {
       repository: {
         object: { text },
@@ -43,7 +45,7 @@ export default class GithubStorage {
     message = {
       headline: '[log-bot]',
     }
-  ) {
+  ): Promise<GraphQlQueryResponseData> {
     return await this.#graphqlWithAuth<GraphQlQueryResponseData>(
       `mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
