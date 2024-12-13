@@ -40,8 +40,11 @@ export default class GithubStorage {
   }
 
   /* commit */
-  async log(
-    additions: { path: string; contents: string }[],
+  async save(
+    fileChanges: {
+      additions?: { path: string; contents: string }[]
+      deletions?: { path: string }[]
+    },
     message = {
       headline: '[log-bot]',
     }
@@ -61,9 +64,7 @@ export default class GithubStorage {
             branchName: `${this.#branch}`,
           },
           message,
-          fileChanges: {
-            additions,
-          },
+          fileChanges,
           expectedHeadOid: await this.getOid(),
         },
       }
@@ -72,13 +73,7 @@ export default class GithubStorage {
 
   /* read oid of head - this is needed e.g. for subsequent commit */
   private async getOid(): Promise<string> {
-    const {
-      repository: {
-        ref: {
-          target: { oid },
-        },
-      },
-    } = await this.#graphqlWithAuth<GraphQlQueryResponseData>(
+    const response = await this.#graphqlWithAuth<GraphQlQueryResponseData>(
       `
         {
           repository(name: "${this.#repository}", owner: "${this.#owner}") {
@@ -91,7 +86,18 @@ export default class GithubStorage {
             }
           }
         }`
-    )
+    ).catch(() => null)
+
+    if (response == null) return ''
+
+    const {
+      repository: {
+        ref: {
+          target: { oid },
+        },
+      },
+    } = response
+
     return oid
   }
 

@@ -5387,8 +5387,8 @@ class GithubStorage {
         });
     }
     /* commit */
-    log(additions_1) {
-        return __awaiter(this, arguments, void 0, function* (additions, message = {
+    save(fileChanges_1) {
+        return __awaiter(this, arguments, void 0, function* (fileChanges, message = {
             headline: '[log-bot]',
         }) {
             return yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `mutation ($input: CreateCommitOnBranchInput!) {
@@ -5404,9 +5404,7 @@ class GithubStorage {
                         branchName: `${__classPrivateFieldGet(this, _GithubStorage_branch, "f")}`,
                     },
                     message,
-                    fileChanges: {
-                        additions,
-                    },
+                    fileChanges,
                     expectedHeadOid: yield this.getOid(),
                 },
             });
@@ -5415,7 +5413,7 @@ class GithubStorage {
     /* read oid of head - this is needed e.g. for subsequent commit */
     getOid() {
         return __awaiter(this, void 0, void 0, function* () {
-            const { repository: { ref: { target: { oid }, }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `
+            const response = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `
         {
           repository(name: "${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}", owner: "${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}") {
             ref(qualifiedName: "${__classPrivateFieldGet(this, _GithubStorage_branch, "f")}") {
@@ -5426,7 +5424,10 @@ class GithubStorage {
               }
             }
           }
-        }`);
+        }`).catch(() => null);
+            if (response == null)
+                return '';
+            const { repository: { ref: { target: { oid }, }, }, } = response;
             return oid;
         });
     }

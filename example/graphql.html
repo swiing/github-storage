@@ -16,27 +16,47 @@
     })
     .catch(console.error)
 
-  /* write data * /
+  /* write data */
   await storage
-    .log([
-      {
-        path: 'myfile2.txt',
-        contents: 'SGVsbG8gZnJvbSBKQVZBIGFuZCBHcmFwaFFM',
-      },
-      {
-        path: 'log2.json',
-        contents: btoa(
-          JSON.stringify(
-            {
-              ...{ [Date.now()]: 'some content' },
-              ...JSON.parse(text),
-            },
-            null,
-            '\t'
-          )
-        ),
-      },
-    ])
+    .save({
+      additions: [
+        {
+          path: 'myfile2.txt',
+          contents: 'SGVsbG8gZnJvbSBKQVZBIGFuZCBHcmFwaFFM',
+        },
+        {
+          path: 'log2.json',
+          contents: btoa(
+            JSON.stringify(
+              {
+                ...{ [Date.now()]: 'some content' },
+                ...JSON.parse(text),
+              },
+              null,
+              '\t'
+            )
+          ),
+        },
+      ],
+    })
+    .then(console.dir)
+    .catch(console.error) /* */
+
+  /* deletions */
+  await storage
+    .save({
+      additions: [
+        {
+          path: 'myfile2.txt',
+          contents: 'SGVsbG8gZnJvbSBKQVZBIGFuZCBHcmFwaFFM',
+        },
+      ],
+      deletions: [
+        {
+          path: 'log2.json',
+        },
+      ],
+    })
     .then(console.dir)
     .catch(console.error) /* */
 
