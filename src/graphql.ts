@@ -48,7 +48,11 @@ export default class GithubStorage {
     message = {
       headline: '[log-bot]',
     }
-  ): Promise<GraphQlQueryResponseData> {
+  ): Promise<GraphQlQueryResponseData | null> {
+    const oid = await this.getOid().catch()
+
+    if (!oid) return null
+
     return await this.#graphqlWithAuth<GraphQlQueryResponseData>(
       `mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
@@ -65,7 +69,7 @@ export default class GithubStorage {
           },
           message,
           fileChanges,
-          expectedHeadOid: await this.getOid(),
+          expectedHeadOid: oid,
         },
       }
     )
@@ -88,7 +92,12 @@ export default class GithubStorage {
         }`
     ).catch(() => null)
 
-    if (response == null) return ''
+    if (
+      response == null ||
+      // case where branch does not exist
+      !response.repository.ref
+    )
+      return ''
 
     const {
       repository: {
@@ -102,7 +111,11 @@ export default class GithubStorage {
   }
 
   // https://github.com/orgs/community/discussions/35291
-  async createBranch(branch: string): Promise<string | null> {
+  async createBranch(
+    branch: string,
+    // new branch will be created based on the template branch (defaults to 'main')
+    template = 'main'
+  ): Promise<string | null> {
     try {
       // retrieve repositoryId and oid
       const {
@@ -110,14 +123,15 @@ export default class GithubStorage {
           id,
           // "main" branch will be the base of the new branch
           // @todo: should I define a "template" branch and make it the base for new branches?
-          defaultBranchRef: {
+          ref: {
             target: { oid },
           },
         },
-      } = await this.#graphqlWithAuth<GraphQlQueryResponseData>(`{
+      } = // https://github.com/orgs/community/discussions/35291
+        await this.#graphqlWithAuth<GraphQlQueryResponseData>(`{
         repository(name: "${this.#repository}", owner: "${this.#owner}") {
           id
-          defaultBranchRef {
+          ref(qualifiedName: "${template}") {
             target {
               ... on GitObject {
                 oid
@@ -132,8 +146,9 @@ export default class GithubStorage {
         createRef: {
           ref: { name },
         },
-      } = await this.#graphqlWithAuth<GraphQlQueryResponseData>(`mutation {
-        createRef(input: {name: "refs/heads/${branch}", repositoryId: "${id}", oid: "${oid}"}) {
+      } = // https://github.com/orgs/community/discussions/35291
+        await this.#graphqlWithAuth<GraphQlQueryResponseData>(`mutation {
+        createRef(input: {name: "${branch}", repositoryId: "${id}", oid: "${oid}"}) {
           ref {
             name
           }

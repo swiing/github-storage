@@ -5391,6 +5391,9 @@ class GithubStorage {
         return __awaiter(this, arguments, void 0, function* (fileChanges, message = {
             headline: '[log-bot]',
         }) {
+            const oid = yield this.getOid().catch();
+            if (!oid)
+                return null;
             return yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
@@ -5405,7 +5408,7 @@ class GithubStorage {
                     },
                     message,
                     fileChanges,
-                    expectedHeadOid: yield this.getOid(),
+                    expectedHeadOid: oid,
                 },
             });
         });
@@ -5425,24 +5428,29 @@ class GithubStorage {
             }
           }
         }`).catch(() => null);
-            if (response == null)
+            if (response == null ||
+                // case where branch does not exist
+                !response.repository.ref)
                 return '';
             const { repository: { ref: { target: { oid }, }, }, } = response;
             return oid;
         });
     }
     // https://github.com/orgs/community/discussions/35291
-    createBranch(branch) {
-        return __awaiter(this, void 0, void 0, function* () {
+    createBranch(branch_1) {
+        return __awaiter(this, arguments, void 0, function* (branch, 
+        // new branch will be created based on the template branch (defaults to 'main')
+        template = 'main') {
             try {
                 // retrieve repositoryId and oid
                 const { repository: { id, 
                 // "main" branch will be the base of the new branch
                 // @todo: should I define a "template" branch and make it the base for new branches?
-                defaultBranchRef: { target: { oid }, }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `{
+                ref: { target: { oid }, }, }, } = // https://github.com/orgs/community/discussions/35291
+                 yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `{
         repository(name: "${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}", owner: "${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}") {
           id
-          defaultBranchRef {
+          ref(qualifiedName: "${template}") {
             target {
               ... on GitObject {
                 oid
@@ -5452,8 +5460,9 @@ class GithubStorage {
         }
       }`);
                 // create branch
-                const { createRef: { ref: { name }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `mutation {
-        createRef(input: {name: "refs/heads/${branch}", repositoryId: "${id}", oid: "${oid}"}) {
+                const { createRef: { ref: { name }, }, } = // https://github.com/orgs/community/discussions/35291
+                 yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `mutation {
+        createRef(input: {name: "${branch}", repositoryId: "${id}", oid: "${oid}"}) {
           ref {
             name
           }
