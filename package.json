@@ -15,11 +15,13 @@
   "type": "module",
   "private": true,
   "engines": {
-    "npm": ">=7"
+    "npm": ">=7",
+    "typescript": ">5.1"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.3.0",
     "@rollup/plugin-typescript": "^12.1.0",
+    "@types/node": "^24.2.1",
     "@typescript-eslint/eslint-plugin": "8.7.0",
     "@typescript-eslint/parser": "8.7.0",
     "eslint": "8.57.1",
@@ -35,7 +37,12 @@
     "@octokit/graphql": "^8.1.1",
     "@rollup/plugin-commonjs": "^28.0.0",
     "gotrue-js": "^0.9.29",
-    "octokit": "^4.0.2"
+    "octokit": "^4.0.2",
+    "type-fest": "^4.41.0"
+  },
+  "peerDependencies": {
+    "@types/node": "20.x || 22.x || 24.x",
+    "typescript": "^5.1.0"
   },
   "files": [
     "dist/"

@@ -1,5 +1,7 @@
+import { Buffer } from 'node:buffer'
 import { graphql } from '@octokit/graphql'
 import type { GraphQlQueryResponseData } from '@octokit/graphql'
+import type { JsonObject } from 'type-fest'
 
 export type { GraphQlQueryResponseData }
 
@@ -42,7 +44,7 @@ export default class GithubStorage {
   /* commit */
   async save(
     fileChanges: {
-      additions?: { path: string; contents: string }[]
+      additions?: { path: string; contents: string | JsonObject }[]
       deletions?: { path: string }[]
     },
     message = {
@@ -52,6 +54,21 @@ export default class GithubStorage {
     const oid = await this.getOid().catch()
 
     if (!oid) return null
+
+    // Make sure content is base64 encoded, as required by
+    // https://docs.github.com/en/graphql/reference/input-objects?versionId=free-pro-team%40latest&page=mutations#encoding
+    fileChanges.additions?.forEach(({ path, contents }, index, additions) => {
+      if (typeof contents !== 'string')
+        contents = JSON.stringify(contents, null, '\t')
+
+      additions[index] = {
+        path,
+        // At some point, I may be able to use https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64
+        // but this is currently not supported by node
+        // (Buffers are Uint8Array's, as per https://nodejs.org/api/buffer.html#buffers-and-typedarrays)
+        contents: Buffer.from(contents, 'utf-8').toString('base64'),
+      }
+    })
 
     return await this.#graphqlWithAuth<GraphQlQueryResponseData>(
       `mutation ($input: CreateCommitOnBranchInput!) {

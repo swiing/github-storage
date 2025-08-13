@@ -1,4 +1,5 @@
 import type { GraphQlQueryResponseData } from '@octokit/graphql';
+import type { JsonObject } from 'type-fest';
 export type { GraphQlQueryResponseData };
 export default class GithubStorage {
     #private;
@@ -7,7 +8,7 @@ export default class GithubStorage {
     save(fileChanges: {
         additions?: {
             path: string;
-            contents: string;
+            contents: string | JsonObject;
         }[];
         deletions?: {
             path: string;

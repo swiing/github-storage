@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer';
+
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
 
@@ -5391,9 +5393,23 @@ class GithubStorage {
         return __awaiter(this, arguments, void 0, function* (fileChanges, message = {
             headline: '[log-bot]',
         }) {
+            var _a;
             const oid = yield this.getOid().catch();
             if (!oid)
                 return null;
+            // Make sure content is base64 encoded, as required by
+            // https://docs.github.com/en/graphql/reference/input-objects?versionId=free-pro-team%40latest&page=mutations#encoding
+            (_a = fileChanges.additions) === null || _a === void 0 ? void 0 : _a.forEach(({ path, contents }, index, additions) => {
+                if (typeof contents !== 'string')
+                    contents = JSON.stringify(contents, null, '\t');
+                additions[index] = {
+                    path,
+                    // At some point, I may be able to use https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64
+                    // but this is currently not supported by node
+                    // (Buffers are Uint8Array's, as per https://nodejs.org/api/buffer.html#buffers-and-typedarrays)
+                    contents: Buffer.from(contents, 'utf-8').toString('base64'),
+                };
+            });
             return yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {

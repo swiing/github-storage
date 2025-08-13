@@ -16,6 +16,8 @@ It relies on Netlify git gateway.
 
 ## Installation
 
+The consumer is expected to install `@types/node`.
+
 Due to Netlify limits in total build time, this is not suitable for frequent
 updates.
 
