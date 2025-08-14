@@ -8,7 +8,7 @@ export default class GithubStorage {
     save(fileChanges: {
         additions?: {
             path: string;
-            contents: string | JsonObject;
+            contents: string | JsonObject | JsonObject[];
         }[];
         deletions?: {
             path: string;

@@ -44,7 +44,10 @@ export default class GithubStorage {
   /* commit */
   async save(
     fileChanges: {
-      additions?: { path: string; contents: string | JsonObject }[]
+      additions?: {
+        path: string
+        contents: string | JsonObject | JsonObject[]
+      }[]
       deletions?: { path: string }[]
     },
     message = {
