@@ -1,50 +1,5 @@
 import { Buffer } from 'node:buffer';
 
-/******************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */
-/* global Reflect, Promise, SuppressedError, Symbol, Iterator */
-
-
-function __awaiter(thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-}
-
-function __classPrivateFieldGet(receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-}
-
-function __classPrivateFieldSet(receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
-}
-
-typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
-    var e = new Error(message);
-    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
-};
-
 function getUserAgent() {
   if (typeof navigator === "object" && "userAgent" in navigator) {
     return navigator.userAgent;
@@ -5274,168 +5229,160 @@ function onSecondaryRateLimit(retryAfter, options, octokit) {
 const headers = { 'X-GitHub-Api-Version': '2022-11-28' };
 // ref https://docs.github.com/en/rest/gists/gists?apiVersion=2022-11-28#create-a-gist
 // Note: at this stage, it seems there is no graphql API to create gists
-function createGist(files_1, auth_1, description_1) {
-    return __awaiter(this, arguments, void 0, function* (files, auth, description, isPublic = false) {
-        // Octokit.js
-        // https://github.com/octokit/core.js#readme
-        const octokit = new Octokit({
-            // must have gists read/write permission
-            // + access to all repositories (in fact private repositories), to be able to write secret gists
-            auth,
-        });
-        const res = yield octokit.request('POST /gists', {
-            description,
-            public: isPublic,
-            files,
-            headers,
-        });
-        // console.dir(res)
-        const { status, data } = res;
-        // https://docs.github.com/en/rest/gists/gists?apiVersion=2022-11-28#create-a-gist--status-codes
-        if (status !== 201 && status !== 304)
-            return null;
-        //   console.dir(data)
-        // const { id } = data // this is the gist hash
-        // but I also want to get the revision hash
-        const url = data.history[0].url;
-        return url !== null && url !== void 0 ? url : null;
+async function createGist(files, auth, description, isPublic = false) {
+    // Octokit.js
+    // https://github.com/octokit/core.js#readme
+    const octokit = new Octokit({
+        // must have gists read/write permission
+        // + access to all repositories (in fact private repositories), to be able to write secret gists
+        auth,
     });
+    const res = await octokit.request('POST /gists', {
+        description,
+        public: isPublic,
+        files,
+        headers,
+    });
+    // console.dir(res)
+    const { status, data } = res;
+    // https://docs.github.com/en/rest/gists/gists?apiVersion=2022-11-28#create-a-gist--status-codes
+    if (status !== 201 && status !== 304)
+        return null;
+    //   console.dir(data)
+    // const { id } = data // this is the gist hash
+    // but I also want to get the revision hash
+    const url = data.history[0].url;
+    return url ?? null;
 }
 // ref https://octokit.github.io/rest.js/v20/#gists-update
 // Note: at this stage, it seems there is no graphql API to create gists
-function updateGist(gist_id, 
+async function updateGist(gist_id, 
 // for now, I do not support delete or rename file
 files, auth) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // Octokit.js
-        // https://github.com/octokit/core.js#readme
-        const octokit = new Octokit({
-            // must have gists read/write permission
-            // + access to all repositories (in fact private repositories), to be able to write secret gists
-            auth,
-        });
-        const res = yield octokit.rest.gists.update({
-            gist_id,
-            files,
-        });
-        // console.dir(res)
-        const { /* status, */ data } = res;
-        // status is always === 200 in case of gist update
-        // if (status !== 201 && status !== 304) return null
-        // console.dir(data)
-        // const { id } = data // this is the gist hash
-        // but I also want to get the revision hash
-        const url = data.history[0].url;
-        return url !== null && url !== void 0 ? url : null;
+    // Octokit.js
+    // https://github.com/octokit/core.js#readme
+    const octokit = new Octokit({
+        // must have gists read/write permission
+        // + access to all repositories (in fact private repositories), to be able to write secret gists
+        auth,
     });
+    const res = await octokit.rest.gists.update({
+        gist_id,
+        files,
+    });
+    // console.dir(res)
+    const { /* status, */ data } = res;
+    // status is always === 200 in case of gist update
+    // if (status !== 201 && status !== 304) return null
+    // console.dir(data)
+    // const { id } = data // this is the gist hash
+    // but I also want to get the revision hash
+    const url = data.history[0].url;
+    return url ?? null;
 }
 // ref https://docs.github.com/en/rest/gists/gists?apiVersion=2022-11-28#get-a-gist
-function getGist(gist_id, auth) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // Octokit.js
-        // https://github.com/octokit/core.js#readme
-        const octokit = new Octokit({
-            // no token needed to read public gists
-            // auth: 'YOUR-TOKEN'
-            auth,
-        });
-        //   const gist = await octokit.request(
-        //     `GET /gists/${gist_id}`,
-        //     {
-        //       gist_id,
-        //       headers: {
-        //         'X-GitHub-Api-Version': '2022-11-28',
-        //       },
-        //     }
-        //   )
-        const gist = yield octokit.rest.gists.get({
-            gist_id,
-            headers,
-        });
-        return gist.data; // ?.files!['meta.json']
+async function getGist(gist_id, auth) {
+    // Octokit.js
+    // https://github.com/octokit/core.js#readme
+    const octokit = new Octokit({
+        // no token needed to read public gists
+        // auth: 'YOUR-TOKEN'
+        auth,
     });
+    //   const gist = await octokit.request(
+    //     `GET /gists/${gist_id}`,
+    //     {
+    //       gist_id,
+    //       headers: {
+    //         'X-GitHub-Api-Version': '2022-11-28',
+    //       },
+    //     }
+    //   )
+    const gist = await octokit.rest.gists.get({
+        gist_id,
+        headers,
+    });
+    return gist.data; // ?.files!['meta.json']
 }
 
-var _GithubStorage_graphqlWithAuth, _GithubStorage_repository, _GithubStorage_owner, _GithubStorage_branch;
-// https://stackoverflow.com/questions/72836597/how-to-create-new-commit-with-the-github-graphql-api
 class GithubStorage {
+    #graphqlWithAuth;
+    #repository; // e.g. 'sandbox-git-gateway'
+    #owner; // e.g. 'swiing'
+    #branch;
     constructor(repository, owner, pat, branch = 'main') {
-        _GithubStorage_graphqlWithAuth.set(this, void 0);
-        _GithubStorage_repository.set(this, void 0); // e.g. 'sandbox-git-gateway'
-        _GithubStorage_owner.set(this, void 0); // e.g. 'swiing'
-        _GithubStorage_branch.set(this, void 0);
-        __classPrivateFieldSet(this, _GithubStorage_repository, repository, "f");
-        __classPrivateFieldSet(this, _GithubStorage_owner, owner, "f");
-        __classPrivateFieldSet(this, _GithubStorage_branch, branch, "f");
-        __classPrivateFieldSet(this, _GithubStorage_graphqlWithAuth, graphql2.defaults({
+        this.#repository = repository;
+        this.#owner = owner;
+        this.#branch = branch;
+        this.#graphqlWithAuth = graphql2.defaults({
             headers: {
                 authorization: `token ${pat}`,
             },
-        }), "f");
+        });
     }
     // e.g. file === log.json
-    read(file) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { repository: { object: { text }, }, } = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `{
-    repository(name: "${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}", owner: "${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}") {
-      object(expression: "${__classPrivateFieldGet(this, _GithubStorage_branch, "f")}:${file}") {
+    async read(file) {
+        const { repository: { object: { text }, }, } = await this.#graphqlWithAuth(`{
+    repository(name: "${this.#repository}", owner: "${this.#owner}") {
+      object(expression: "${this.#branch}:${file}") {
         ... on Blob {
           text
         }
       }
     }
   }`);
-            return text;
-        });
+        return text;
     }
     /* commit */
-    save(fileChanges_1) {
-        return __awaiter(this, arguments, void 0, function* (fileChanges, message = {
-            headline: '[log-bot]',
-        }) {
-            var _a;
-            const oid = yield this.getOid().catch();
-            if (!oid)
-                return null;
-            // Make sure content is base64 encoded, as required by
-            // https://docs.github.com/en/graphql/reference/input-objects?versionId=free-pro-team%40latest&page=mutations#encoding
-            (_a = fileChanges.additions) === null || _a === void 0 ? void 0 : _a.forEach(({ path, contents }, index, additions) => {
-                if (typeof contents !== 'string')
-                    contents = JSON.stringify(contents, null, '\t');
-                additions[index] = {
-                    path,
-                    // At some point, I may be able to use https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64
-                    // but this is currently not supported by node
-                    // (Buffers are Uint8Array's, as per https://nodejs.org/api/buffer.html#buffers-and-typedarrays)
-                    contents: Buffer.from(contents, 'utf-8').toString('base64'),
-                };
-            });
-            return yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `mutation ($input: CreateCommitOnBranchInput!) {
+    async save(fileChanges, message = {
+        headline: '[log-bot]',
+    }) {
+        const oid = await this.getOid().catch();
+        if (!oid)
+            return null;
+        // Make sure content is base64 encoded, as required by
+        // https://docs.github.com/en/graphql/reference/input-objects?versionId=free-pro-team%40latest&page=mutations#encoding
+        fileChanges.additions?.forEach(({ path, contents }, index, additions) => {
+            if (typeof contents !== 'string')
+                contents = JSON.stringify(contents, null, '\t');
+            additions[index] = {
+                path,
+                // At some point, I may be able to use https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64
+                // but this is currently not supported by node
+                // (Buffers are Uint8Array's, as per https://nodejs.org/api/buffer.html#buffers-and-typedarrays)
+                contents: Buffer.from(contents, 'utf-8').toString('base64'),
+            };
+        });
+        const { createCommitOnBranch: { commit: { 
+        // @todo: I may prefer abbreviatedOid, or status, or id, or oid, or committedDate,
+        // or even a combination of those.
+        abbreviatedOid, url, }, }, } = await this.#graphqlWithAuth(`mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
+          abbreviatedOid,
           url
         }
       }
     }`, {
-                input: {
-                    branch: {
-                        repositoryNameWithOwner: `${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}/${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}`,
-                        branchName: `${__classPrivateFieldGet(this, _GithubStorage_branch, "f")}`,
-                    },
-                    message,
-                    fileChanges,
-                    expectedHeadOid: oid,
+            input: {
+                branch: {
+                    repositoryNameWithOwner: `${this.#owner}/${this.#repository}`,
+                    branchName: `${this.#branch}`,
                 },
-            });
+                message,
+                fileChanges,
+                expectedHeadOid: oid,
+            },
         });
+        url.split('/').at(-1) || null;
+        return { abbreviatedOid, url }; // commitHash
     }
     /* read oid of head - this is needed e.g. for subsequent commit */
-    getOid() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const response = yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `
+    async getOid() {
+        const response = await this.#graphqlWithAuth(`
         {
-          repository(name: "${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}", owner: "${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}") {
-            ref(qualifiedName: "${__classPrivateFieldGet(this, _GithubStorage_branch, "f")}") {
+          repository(name: "${this.#repository}", owner: "${this.#owner}") {
+            ref(qualifiedName: "${this.#branch}") {
               target {
                 ... on GitObject {
                   oid
@@ -5444,27 +5391,22 @@ class GithubStorage {
             }
           }
         }`).catch(() => null);
-            if (response == null ||
-                // case where branch does not exist
-                !response.repository.ref)
-                return '';
-            const { repository: { ref: { target: { oid }, }, }, } = response;
-            return oid;
-        });
+        if (response == null ||
+            // case where branch does not exist
+            !response.repository.ref)
+            return '';
+        const { repository: { ref: { target: { oid }, }, }, } = response;
+        return oid;
     }
     // https://github.com/orgs/community/discussions/35291
-    createBranch(branch_1) {
-        return __awaiter(this, arguments, void 0, function* (branch, 
-        // new branch will be created based on the template branch (defaults to 'main')
-        template = 'main') {
-            try {
-                // retrieve repositoryId and oid
-                const { repository: { id, 
-                // "main" branch will be the base of the new branch
-                // @todo: should I define a "template" branch and make it the base for new branches?
-                ref: { target: { oid }, }, }, } = // https://github.com/orgs/community/discussions/35291
-                 yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `{
-        repository(name: "${__classPrivateFieldGet(this, _GithubStorage_repository, "f")}", owner: "${__classPrivateFieldGet(this, _GithubStorage_owner, "f")}") {
+    async createBranch(branch, 
+    // new branch will be created based on the template branch (defaults to 'main')
+    template = 'main') {
+        try {
+            // retrieve repositoryId and oid
+            const response = // https://github.com/orgs/community/discussions/35291
+             await this.#graphqlWithAuth(`{
+        repository(name: "${this.#repository}", owner: "${this.#owner}") {
           id
           ref(qualifiedName: "${template}") {
             target {
@@ -5475,24 +5417,28 @@ class GithubStorage {
           }
         }
       }`);
-                // create branch
-                const { createRef: { ref: { name }, }, } = // https://github.com/orgs/community/discussions/35291
-                 yield __classPrivateFieldGet(this, _GithubStorage_graphqlWithAuth, "f").call(this, `mutation {
-        createRef(input: {name: "${branch}", repositoryId: "${id}", oid: "${oid}"}) {
+            if (!response.repository.ref)
+                throw new RangeError(`Template branch "${template}" does not exist.`);
+            const { repository: { id, 
+            // "main" branch will be the base of the new branch
+            // @todo: should I define a "template" branch and make it the base for new branches?
+            ref: { target: { oid }, }, }, } = response;
+            // create branch
+            const { createRef: { ref: { name }, }, } = // https://github.com/orgs/community/discussions/35291
+             await this.#graphqlWithAuth(`mutation {
+        createRef(input: {name: "refs/heads/${branch}", repositoryId: "${id}", oid: "${oid}"}) {
           ref {
             name
           }
         }
       }`);
-                return name;
-            }
-            catch (error) {
-                console.error(error);
-                return null;
-            }
-        });
+            return name;
+        }
+        catch (error) {
+            console.error(error);
+            return null;
+        }
     }
 }
-_GithubStorage_graphqlWithAuth = new WeakMap(), _GithubStorage_repository = new WeakMap(), _GithubStorage_owner = new WeakMap(), _GithubStorage_branch = new WeakMap();
 
 export { GithubStorage, createGist, getGist, updateGist };

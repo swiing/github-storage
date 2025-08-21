@@ -1,6 +1,4 @@
-import type { GraphQlQueryResponseData } from '@octokit/graphql';
 import type { JsonObject } from 'type-fest';
-export type { GraphQlQueryResponseData };
 export default class GithubStorage {
     #private;
     constructor(repository: string, owner: string, pat: string, branch?: string);
@@ -15,7 +13,10 @@ export default class GithubStorage {
         }[];
     }, message?: {
         headline: string;
-    }): Promise<GraphQlQueryResponseData | null>;
+    }): Promise<{
+        abbreviatedOid: string;
+        url: string;
+    } | null>;
     private getOid;
     createBranch(branch: string, template?: string): Promise<string | null>;
 }

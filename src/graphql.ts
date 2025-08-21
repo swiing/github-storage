@@ -203,7 +203,7 @@ export default class GithubStorage {
         },
       } = // https://github.com/orgs/community/discussions/35291
         await this.#graphqlWithAuth<createRef>(`mutation {
-        createRef(input: {name: "${branch}", repositoryId: "${id}", oid: "${oid}"}) {
+        createRef(input: {name: "refs/heads/${branch}", repositoryId: "${id}", oid: "${oid}"}) {
           ref {
             name
           }
