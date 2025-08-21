@@ -5354,9 +5354,9 @@ class GithubStorage {
             };
         });
         const { createCommitOnBranch: { commit: { 
-        // @todo: I may prefer abbreviatedOid, or status, or id, or oid, or committedDate,
+        // @todo: I may prefer abbreviatedOid, or status, or id, or url, or committedDate,
         // or even a combination of those.
-        abbreviatedOid, url, }, }, } = await this.#graphqlWithAuth(`mutation ($input: CreateCommitOnBranchInput!) {
+        oid: returnOid, }, }, } = await this.#graphqlWithAuth(`mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
           abbreviatedOid,
@@ -5374,8 +5374,7 @@ class GithubStorage {
                 expectedHeadOid: oid,
             },
         });
-        url.split('/').at(-1) || null;
-        return { abbreviatedOid, url }; // commitHash
+        return returnOid;
     }
     /* read oid of head - this is needed e.g. for subsequent commit */
     async getOid() {

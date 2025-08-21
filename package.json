@@ -6,6 +6,7 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p . && rollup -c",
+    "example": "node example/graphql.js",
     "lint": "eslint ./src --ext ts",
     "prepare": "npm run build",
     "style:fix": "prettier src/**/*.ts --write",

@@ -13,10 +13,7 @@ export default class GithubStorage {
         }[];
     }, message?: {
         headline: string;
-    }): Promise<{
-        abbreviatedOid: string;
-        url: string;
-    } | null>;
+    }): Promise<string | null>;
     private getOid;
     createBranch(branch: string, template?: string): Promise<string | null>;
 }
