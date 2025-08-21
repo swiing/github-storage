@@ -5434,8 +5434,14 @@ class GithubStorage {
             return name;
         }
         catch (error) {
-            console.error(error);
-            return null;
+            if (error instanceof GraphqlResponseError) {
+                const msg = error.message; // error.errors.map(err=>err.message)
+                // Full actual message is
+                // 'A ref named "refs/heads/<branch_name>" already exists in the repository.'
+                if (/already exists in the repository/.test(msg))
+                    throw new RangeError(`A branch already exists with the name '${branch}'`);
+            }
+            throw Error(`An error occurred while creating branch '${branch}'`);
         }
     }
 }

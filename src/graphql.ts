@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer'
-import { graphql } from '@octokit/graphql'
+import { graphql, GraphqlResponseError } from '@octokit/graphql'
 import type { JsonObject } from 'type-fest'
 
 // https://stackoverflow.com/questions/72836597/how-to-create-new-commit-with-the-github-graphql-api
@@ -211,8 +211,16 @@ export default class GithubStorage {
       }`)
       return name
     } catch (error) {
-      console.error(error)
-      return null
+      if (error instanceof GraphqlResponseError) {
+        const msg = error.message // error.errors.map(err=>err.message)
+        // Full actual message is
+        // 'A ref named "refs/heads/<branch_name>" already exists in the repository.'
+        if (/already exists in the repository/.test(msg))
+          throw new RangeError(
+            `A branch already exists with the name '${branch}'`
+          )
+      }
+      throw error
     }
   }
 }

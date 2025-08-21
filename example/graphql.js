@@ -1,4 +1,3 @@
-import { Console } from 'node:console'
 import { GithubStorage } from '../dist/index.js'
 import { repository, owner, pat, branch } from './credentials.js'
 
@@ -59,11 +58,12 @@ await storage
   .catch(console.error) /* */
 
 // create branch
-const aBranchName = 'testbranch2'
+const aBranchName = 'testbranch3'
 console.log(`creating branch ${aBranchName}`)
-const newbranch = await storage.createBranch(aBranchName, branch)
-if (newbranch) console.log(`created branch ${newbranch}.`)
-else
-  console.log(
-    `could not create branch ${aBranchName} (either the branch already existed, or another error occurred). `
-  )
+try {
+  const newbranch = await storage.createBranch(aBranchName, branch)
+  if (newbranch) console.log(`created branch ${newbranch}.`)
+  else console.log(`could not create branch ${aBranchName}.`)
+} catch (err) {
+  console.dir(err)
+}
