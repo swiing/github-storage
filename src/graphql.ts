@@ -1,11 +1,30 @@
 import { Buffer } from 'node:buffer'
 import { graphql } from '@octokit/graphql'
-import type { GraphQlQueryResponseData } from '@octokit/graphql'
 import type { JsonObject } from 'type-fest'
 
-export type { GraphQlQueryResponseData }
-
 // https://stackoverflow.com/questions/72836597/how-to-create-new-commit-with-the-github-graphql-api
+
+interface RepositoryType {
+  repository: {
+    id: string
+    object: { text: string }
+    ref?: {
+      target: {
+        oid: string
+      }
+    }
+  }
+}
+
+interface CreateCommitOnBranch {
+  createCommitOnBranch: { commit: { oid: string } }
+}
+
+interface createRef {
+  createRef: {
+    ref: { name: string }
+  }
+}
 
 export default class GithubStorage {
   #graphqlWithAuth
@@ -29,7 +48,7 @@ export default class GithubStorage {
       repository: {
         object: { text },
       },
-    } = await this.#graphqlWithAuth<GraphQlQueryResponseData>(`{
+    } = await this.#graphqlWithAuth<RepositoryType>(`{
     repository(name: "${this.#repository}", owner: "${this.#owner}") {
       object(expression: "${this.#branch}:${file}") {
         ... on Blob {
@@ -53,7 +72,7 @@ export default class GithubStorage {
     message = {
       headline: '[log-bot]',
     }
-  ): Promise<GraphQlQueryResponseData | null> {
+  ) {
     const oid = await this.getOid().catch()
 
     if (!oid) return null
@@ -73,10 +92,19 @@ export default class GithubStorage {
       }
     })
 
-    return await this.#graphqlWithAuth<GraphQlQueryResponseData>(
+    const {
+      createCommitOnBranch: {
+        commit: {
+          // @todo: I may prefer abbreviatedOid, or status, or id, or url, or committedDate,
+          // or even a combination of those.
+          oid: returnOid,
+        },
+      },
+    } = await this.#graphqlWithAuth<CreateCommitOnBranch>(
       `mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
+          abbreviatedOid,
           url
         }
       }
@@ -93,11 +121,13 @@ export default class GithubStorage {
         },
       }
     )
+
+    return returnOid
   }
 
   /* read oid of head - this is needed e.g. for subsequent commit */
   private async getOid(): Promise<string> {
-    const response = await this.#graphqlWithAuth<GraphQlQueryResponseData>(
+    const response = await this.#graphqlWithAuth<RepositoryType>(
       `
         {
           repository(name: "${this.#repository}", owner: "${this.#owner}") {
@@ -138,17 +168,8 @@ export default class GithubStorage {
   ): Promise<string | null> {
     try {
       // retrieve repositoryId and oid
-      const {
-        repository: {
-          id,
-          // "main" branch will be the base of the new branch
-          // @todo: should I define a "template" branch and make it the base for new branches?
-          ref: {
-            target: { oid },
-          },
-        },
-      } = // https://github.com/orgs/community/discussions/35291
-        await this.#graphqlWithAuth<GraphQlQueryResponseData>(`{
+      const response = // https://github.com/orgs/community/discussions/35291
+        await this.#graphqlWithAuth<RepositoryType>(`{
         repository(name: "${this.#repository}", owner: "${this.#owner}") {
           id
           ref(qualifiedName: "${template}") {
@@ -161,13 +182,27 @@ export default class GithubStorage {
         }
       }`)
 
+      if (!response.repository.ref)
+        throw new RangeError(`Template branch "${template}" does not exist.`)
+
+      const {
+        repository: {
+          id,
+          // "main" branch will be the base of the new branch
+          // @todo: should I define a "template" branch and make it the base for new branches?
+          ref: {
+            target: { oid },
+          },
+        },
+      } = response
+
       // create branch
       const {
         createRef: {
           ref: { name },
         },
       } = // https://github.com/orgs/community/discussions/35291
-        await this.#graphqlWithAuth<GraphQlQueryResponseData>(`mutation {
+        await this.#graphqlWithAuth<createRef>(`mutation {
         createRef(input: {name: "${branch}", repositoryId: "${id}", oid: "${oid}"}) {
           ref {
             name
