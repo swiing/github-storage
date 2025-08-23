@@ -48,7 +48,8 @@ export default class GithubStorage {
       repository: {
         object: { text },
       },
-    } = await this.#graphqlWithAuth<RepositoryType>(`{
+    } = // https://docs.github.com/en/graphql/reference/queries#repository
+      await this.#graphqlWithAuth<RepositoryType>(`{
     repository(name: "${this.#repository}", owner: "${this.#owner}") {
       object(expression: "${this.#branch}:${file}") {
         ... on Blob {
@@ -92,6 +93,7 @@ export default class GithubStorage {
       }
     })
 
+    // https://docs.github.com/en/graphql/reference/mutations#createcommitonbranch
     const {
       createCommitOnBranch: {
         commit: {
@@ -127,6 +129,7 @@ export default class GithubStorage {
 
   /* read oid of head - this is needed e.g. for subsequent commit */
   private async getOid(): Promise<string> {
+    // https://docs.github.com/en/graphql/reference/queries#repository
     const response = await this.#graphqlWithAuth<RepositoryType>(
       `
         {
@@ -168,6 +171,7 @@ export default class GithubStorage {
   ): Promise<string | null> {
     try {
       // retrieve repositoryId and oid
+      // https://docs.github.com/en/graphql/reference/queries#repository
       const response = // https://github.com/orgs/community/discussions/35291
         await this.#graphqlWithAuth<RepositoryType>(`{
         repository(name: "${this.#repository}", owner: "${this.#owner}") {
@@ -202,6 +206,7 @@ export default class GithubStorage {
           ref: { name },
         },
       } = // https://github.com/orgs/community/discussions/35291
+        // https://docs.github.com/en/graphql/reference/input-objects#createrefinput
         await this.#graphqlWithAuth<createRef>(`mutation {
         createRef(input: {name: "refs/heads/${branch}", repositoryId: "${id}", oid: "${oid}"}) {
           ref {
