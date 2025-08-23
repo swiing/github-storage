@@ -74,9 +74,9 @@ export default class GithubStorage {
       headline: '[log-bot]',
     }
   ) {
-    const oid = await this.getOid().catch()
+    const expectedHeadOid = await this.getOid().catch()
 
-    if (!oid) return null
+    if (!expectedHeadOid) return null
 
     // Make sure content is base64 encoded, as required by
     // https://docs.github.com/en/graphql/reference/input-objects?versionId=free-pro-team%40latest&page=mutations#encoding
@@ -97,17 +97,16 @@ export default class GithubStorage {
     const {
       createCommitOnBranch: {
         commit: {
-          // @todo: I may prefer abbreviatedOid, or status, or id, or url, or committedDate,
+          // @todo: I may prefer abbreviatedOid, or status, or id, or committedDate, or url
           // or even a combination of those.
-          oid: returnOid,
+          oid,
         },
       },
     } = await this.#graphqlWithAuth<CreateCommitOnBranch>(
       `mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
-          abbreviatedOid,
-          url
+          oid
         }
       }
     }`,
@@ -119,12 +118,12 @@ export default class GithubStorage {
           },
           message,
           fileChanges,
-          expectedHeadOid: oid,
+          expectedHeadOid,
         },
       }
     )
 
-    return returnOid
+    return oid
   }
 
   /* read oid of head - this is needed e.g. for subsequent commit */
