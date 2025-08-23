@@ -43,21 +43,22 @@ export default class GithubStorage {
   }
 
   // e.g. file === log.json
-  async read(file: string): Promise<string> {
+  async read(file: string) {
+    // https://docs.github.com/en/graphql/reference/queries#repository
+    const response = await this.#graphqlWithAuth<RepositoryType>(`{
+      repository(name: "${this.#repository}", owner: "${this.#owner}") {
+        object(expression: "${this.#branch}:${file}") {
+          ... on Blob {
+            text
+          }
+        }
+      }
+    }`)
     const {
       repository: {
         object: { text },
       },
-    } = // https://docs.github.com/en/graphql/reference/queries#repository
-      await this.#graphqlWithAuth<RepositoryType>(`{
-    repository(name: "${this.#repository}", owner: "${this.#owner}") {
-      object(expression: "${this.#branch}:${file}") {
-        ... on Blob {
-          text
-        }
-      }
-    }
-  }`)
+    } = response
     return text
   }
 
@@ -76,7 +77,7 @@ export default class GithubStorage {
   ) {
     const expectedHeadOid = await this.getOid().catch()
 
-    if (!expectedHeadOid) return null
+    if (!expectedHeadOid) throw new Error('Could not determine HeadOid')
 
     // Make sure content is base64 encoded, as required by
     // https://docs.github.com/en/graphql/reference/input-objects?versionId=free-pro-team%40latest&page=mutations#encoding
@@ -94,15 +95,7 @@ export default class GithubStorage {
     })
 
     // https://docs.github.com/en/graphql/reference/mutations#createcommitonbranch
-    const {
-      createCommitOnBranch: {
-        commit: {
-          // @todo: I may prefer abbreviatedOid, or status, or id, or committedDate, or url
-          // or even a combination of those.
-          oid,
-        },
-      },
-    } = await this.#graphqlWithAuth<CreateCommitOnBranch>(
+    const response = await this.#graphqlWithAuth<CreateCommitOnBranch>(
       `mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
@@ -122,12 +115,19 @@ export default class GithubStorage {
         },
       }
     )
+    // I may prefer abbreviatedOid, or status, or id, or committedDate, or url
+    // or even a combination of those.
+    const {
+      createCommitOnBranch: {
+        commit: { oid },
+      },
+    } = response
 
     return oid
   }
 
   /* read oid of head - this is needed e.g. for subsequent commit */
-  private async getOid(): Promise<string> {
+  private async getOid() {
     // https://docs.github.com/en/graphql/reference/queries#repository
     const response = await this.#graphqlWithAuth<RepositoryType>(
       `
@@ -200,19 +200,20 @@ export default class GithubStorage {
       } = response
 
       // create branch
-      const {
-        createRef: {
-          ref: { name },
-        },
-      } = // https://github.com/orgs/community/discussions/35291
-        // https://docs.github.com/en/graphql/reference/input-objects#createrefinput
-        await this.#graphqlWithAuth<createRef>(`mutation {
+      // https://github.com/orgs/community/discussions/35291
+      // https://docs.github.com/en/graphql/reference/input-objects#createrefinput
+      const response2 = await this.#graphqlWithAuth<createRef>(`mutation {
         createRef(input: {name: "refs/heads/${branch}", repositoryId: "${id}", oid: "${oid}"}) {
           ref {
             name
           }
         }
       }`)
+      const {
+        createRef: {
+          ref: { name },
+        },
+      } = response2
       return name
     } catch (error) {
       if (error instanceof GraphqlResponseError) {
