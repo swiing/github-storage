@@ -168,7 +168,7 @@ export default class GithubStorage {
     branch: string,
     // new branch will be created based on the template branch (defaults to 'main')
     template = 'main'
-  ): Promise<string | null> {
+  ) {
     try {
       // retrieve repositoryId and oid
       // https://docs.github.com/en/graphql/reference/queries#repository
