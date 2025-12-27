@@ -1,5 +1,3 @@
-import { Buffer } from 'node:buffer';
-
 function getUserAgent() {
   if (typeof navigator === "object" && "userAgent" in navigator) {
     return navigator.userAgent;
@@ -5322,24 +5320,26 @@ class GithubStorage {
     }
     // e.g. file === log.json
     async read(file) {
-        const { repository: { object: { text }, }, } = await this.#graphqlWithAuth(`{
-    repository(name: "${this.#repository}", owner: "${this.#owner}") {
-      object(expression: "${this.#branch}:${file}") {
-        ... on Blob {
-          text
+        // https://docs.github.com/en/graphql/reference/queries#repository
+        const response = await this.#graphqlWithAuth(`{
+      repository(name: "${this.#repository}", owner: "${this.#owner}") {
+        object(expression: "${this.#branch}:${file}") {
+          ... on Blob {
+            text
+          }
         }
       }
-    }
-  }`);
+    }`);
+        const { repository: { object: { text }, }, } = response;
         return text;
     }
     /* commit */
     async save(fileChanges, message = {
         headline: '[log-bot]',
     }) {
-        const oid = await this.getOid().catch();
-        if (!oid)
-            return null;
+        const expectedHeadOid = await this.getOid().catch();
+        if (!expectedHeadOid)
+            throw new Error('Could not determine HeadOid');
         // Make sure content is base64 encoded, as required by
         // https://docs.github.com/en/graphql/reference/input-objects?versionId=free-pro-team%40latest&page=mutations#encoding
         fileChanges.additions?.forEach(({ path, contents }, index, additions) => {
@@ -5347,20 +5347,19 @@ class GithubStorage {
                 contents = JSON.stringify(contents, null, '\t');
             additions[index] = {
                 path,
-                // At some point, I may be able to use https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64
-                // but this is currently not supported by node
-                // (Buffers are Uint8Array's, as per https://nodejs.org/api/buffer.html#buffers-and-typedarrays)
-                contents: Buffer.from(contents, 'utf-8').toString('base64'),
+                // toBase64() is now supported in node 25, as well as in browsers
+                // (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64).
+                // It has been added to typescript (https://github.com/microsoft/TypeScript/pull/61696)
+                // however is not yet available in published typescript (including typescript@next)
+                // @ts-ignore
+                contents: new TextEncoder().encode(contents).toBase64(),
             };
         });
-        const { createCommitOnBranch: { commit: { 
-        // @todo: I may prefer abbreviatedOid, or status, or id, or url, or committedDate,
-        // or even a combination of those.
-        oid: returnOid, }, }, } = await this.#graphqlWithAuth(`mutation ($input: CreateCommitOnBranchInput!) {
+        // https://docs.github.com/en/graphql/reference/mutations#createcommitonbranch
+        const response = await this.#graphqlWithAuth(`mutation ($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
-          abbreviatedOid,
-          url
+          oid
         }
       }
     }`, {
@@ -5371,13 +5370,17 @@ class GithubStorage {
                 },
                 message,
                 fileChanges,
-                expectedHeadOid: oid,
+                expectedHeadOid,
             },
         });
-        return returnOid;
+        // I may prefer abbreviatedOid, or status, or id, or committedDate, or url
+        // or even a combination of those.
+        const { createCommitOnBranch: { commit: { oid }, }, } = response;
+        return oid;
     }
     /* read oid of head - this is needed e.g. for subsequent commit */
     async getOid() {
+        // https://docs.github.com/en/graphql/reference/queries#repository
         const response = await this.#graphqlWithAuth(`
         {
           repository(name: "${this.#repository}", owner: "${this.#owner}") {
@@ -5403,6 +5406,7 @@ class GithubStorage {
     template = 'main') {
         try {
             // retrieve repositoryId and oid
+            // https://docs.github.com/en/graphql/reference/queries#repository
             const response = // https://github.com/orgs/community/discussions/35291
              await this.#graphqlWithAuth(`{
         repository(name: "${this.#repository}", owner: "${this.#owner}") {
@@ -5423,14 +5427,16 @@ class GithubStorage {
             // @todo: should I define a "template" branch and make it the base for new branches?
             ref: { target: { oid }, }, }, } = response;
             // create branch
-            const { createRef: { ref: { name }, }, } = // https://github.com/orgs/community/discussions/35291
-             await this.#graphqlWithAuth(`mutation {
+            // https://github.com/orgs/community/discussions/35291
+            // https://docs.github.com/en/graphql/reference/input-objects#createrefinput
+            const response2 = await this.#graphqlWithAuth(`mutation {
         createRef(input: {name: "refs/heads/${branch}", repositoryId: "${id}", oid: "${oid}"}) {
           ref {
             name
           }
         }
       }`);
+            const { createRef: { ref: { name }, }, } = response2;
             return name;
         }
         catch (error) {
@@ -5441,7 +5447,7 @@ class GithubStorage {
                 if (/already exists in the repository/.test(msg))
                     throw new RangeError(`A branch already exists with the name '${branch}'`);
             }
-            throw Error(`An error occurred while creating branch '${branch}'`);
+            throw error;
         }
     }
 }

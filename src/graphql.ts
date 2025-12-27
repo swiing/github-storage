@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer'
 import { graphql, GraphqlResponseError } from '@octokit/graphql'
 import type { JsonObject } from 'type-fest'
 
@@ -87,10 +86,12 @@ export default class GithubStorage {
 
       additions[index] = {
         path,
-        // At some point, I may be able to use https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64
-        // but this is currently not supported by node
-        // (Buffers are Uint8Array's, as per https://nodejs.org/api/buffer.html#buffers-and-typedarrays)
-        contents: Buffer.from(contents, 'utf-8').toString('base64'),
+        // toBase64() is now supported in node 25, as well as in browsers
+        // (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64).
+        // It has been added to typescript (https://github.com/microsoft/TypeScript/pull/61696)
+        // however is not yet available in published typescript (including typescript@next)
+        // @ts-ignore
+        contents: new TextEncoder().encode(contents).toBase64(),
       }
     })
 

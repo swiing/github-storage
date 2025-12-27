@@ -13,7 +13,7 @@ export default class GithubStorage {
         }[];
     }, message?: {
         headline: string;
-    }): Promise<string | null>;
+    }): Promise<string>;
     private getOid;
-    createBranch(branch: string, template?: string): Promise<string | null>;
+    createBranch(branch: string, template?: string): Promise<string>;
 }

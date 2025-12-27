@@ -17,6 +17,7 @@
   "private": true,
   "engines": {
     "npm": ">=7",
+    "node": ">=25",
     "typescript": ">5.1"
   },
   "devDependencies": {
