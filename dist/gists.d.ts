@@ -41,6 +41,7 @@ export declare function getGist(gist_id: string, auth?: string): Promise<{
         updated_at: string;
         description: string | null;
         comments: number;
+        comments_enabled?: boolean;
         user: import("@octokit/openapi-types").components["schemas"]["nullable-simple-user"];
         comments_url: string;
         owner?: import("@octokit/openapi-types").components["schemas"]["nullable-simple-user"];
@@ -65,6 +66,7 @@ export declare function getGist(gist_id: string, auth?: string): Promise<{
             size?: number;
             truncated?: boolean;
             content?: string;
+            encoding?: string;
         } | null;
     };
     public?: boolean;
@@ -72,6 +74,7 @@ export declare function getGist(gist_id: string, auth?: string): Promise<{
     updated_at?: string;
     description?: string | null;
     comments?: number;
+    comments_enabled?: boolean;
     user?: string | null;
     comments_url?: string;
     owner?: import("@octokit/openapi-types").components["schemas"]["simple-user"];
