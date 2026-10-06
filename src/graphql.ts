@@ -88,9 +88,6 @@ export default class GithubStorage {
         path,
         // toBase64() is now supported in node 25, as well as in browsers
         // (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64).
-        // It has been added to typescript (https://github.com/microsoft/TypeScript/pull/61696)
-        // however is not yet available in published typescript (including typescript@next)
-        // @ts-ignore
         contents: new TextEncoder().encode(contents).toBase64(),
       }
     })
